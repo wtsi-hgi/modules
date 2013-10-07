@@ -7,12 +7,39 @@ _module_avail() {
 		/:$/d;
 		/:ERROR:/d;
 		s#^\(.*\)/\(.\+\)(default)#\1\n\1\/\2#;
+		s#^\(.*\)/\(.\+\)(\(.\+\))#\1/\3\n\1\/\2#;
+		s#/(default)##g;
+		s#/*$##g;'
+}
+
+_module_avail_with_prefixes() {
+ 	_module_avail | awk 'BEGIN {FS="/";} {for(i=1;i<=NF;i++){out=$1; for(j=2;j<=i;j++){out=out "/" $j;} print out;}}' | sort | uniq
+}
+
+_module_loaded() {
+@VERSIONING@	@BASEPREFIX@/@VERSION@/bin/modulecmd bash -t list 2>&1 | sed '
+@NOTVERSIONING@	@bindir@/modulecmd bash -t list 2>&1 | sed '
+		/:$/d;
+		/:ERROR:/d;
+		s#^\(.*\)/\(.\+\)(default)#\1\n\1\/\2#;
+		s#^\(.*\)/\(.\+\)(\(.\+\))#\1/\3\n\1\/\2#;
+		s#/(default)##g;
+		s#/*$##g;'
+}
+
+_module_loaded_no_version_alias() {
+@VERSIONING@	@BASEPREFIX@/@VERSION@/bin/modulecmd bash -t list 2>&1 | sed '
+@NOTVERSIONING@	@bindir@/modulecmd bash -t list 2>&1 | sed '
+		/:$/d;
+		/:ERROR:/d;
+		s#^\(.*\)/\(.\+\)(default)#\1\n\1\/\2#;
+		s#^\(.*\)/\(.\+\)(\(.\+\))#\1\/\2#;
 		s#/(default)##g;
 		s#/*$##g;'
 }
 
 _module_not_yet_loaded() {
-	comm -23  <(_module_avail|sort)  <(tr : '\n' <<<${LOADEDMODULES}|sort)
+	comm -23  <(_module_avail|sort)  <(_module_loaded|sort)
 }
 
 _module_long_arg_list() {
@@ -29,7 +56,7 @@ _module_long_arg_list() {
 		COMPREPLY=( $(compgen -W "$(_module_not_yet_loaded)" -- "$cur") )
 		break;;
 	   rm|remove|unload|switch|swap)
-		COMPREPLY=( $(IFS=: compgen -W "${LOADEDMODULES}" -- "$cur") )
+		COMPREPLY=( $(compgen -W "$(_module_loaded_no_version_alias)" -- "$cur") )
 		break;;
 	   esac
 	done
@@ -52,12 +79,14 @@ _module() {
 	case "$prev" in
 	add|load)	COMPREPLY=( $(compgen -W "$(_module_not_yet_loaded)" -- "$cur") );;
 	rm|remove|unload|switch|swap)
-			COMPREPLY=( $(IFS=: compgen -W "${LOADEDMODULES}" -- "$cur") );;
+			COMPREPLY=( $(compgen -W "$(_module_loaded_no_version_alias)" -- "$cur") );;
 	unuse)		COMPREPLY=( $(IFS=: compgen -W "${MODULEPATH}" -- "$cur") );;
 	use|*-a*)	;;			# let readline handle the completion
 	-u|--userlvl)	COMPREPLY=( $(compgen -W "novice expert advanced" -- "$cur") );;
 	display|help|show|whatis)
 			COMPREPLY=( $(compgen -W "$(_module_avail)" -- "$cur") );;
+	avail)
+			COMPREPLY=( $(compgen -W "$(_module_avail_with_prefixes)" -- "$cur") );;
 	*) if test $COMP_CWORD -gt 2
 	   then
 		_module_long_arg_list "$cur"
