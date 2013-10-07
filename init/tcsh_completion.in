@@ -1,0 +1,94 @@
+#
+# tcsh commandline completion for Modules @VERSION@
+#
+
+alias _module_avail '\\
+@VERSIONING@    @BASEPREFIX@/@VERSION@/bin/modulecmd tcsh -t avail |& sed \\
+@NOTVERSIONING@ @bindir@/modulecmd tcsh -t avail |& sed \\
+                '"'"'/:$/d; \\
+		/:ERROR:/d; \\
+		s#^\(.*\)/\(.\+\)(default)#\1\n\1\/\2#; \\
+		s#^\(.*\)/\(.\+\)(\(.\+\))#\1/\3\n\1\/\2#; \\
+		s#/(default)##g; \\
+		s#/*$##g; '"'"
+
+alias _module_avail_with_prefixes '\\
+                _module_avail | \\
+		awk '"'"'BEGIN {FS="/";} {for(i=1;i<=NF;i++){out=$1; for(j=2;j<=i;j++){out=out "/" $j;} print out;}}'"'"' | \\
+		sort | uniq'
+
+alias _module_loaded '\\
+@VERSIONING@    @BASEPREFIX@/@VERSION@/bin/modulecmd tcsh -t list |& sed \\
+@NOTVERSIONING@ @bindir@/modulecmd tcsh -t list |& sed \\
+		'"'"'/:$/d; \\
+		/:ERROR:/d; \\
+		s#^\(.*\)/\(.\+\)(default)#\1\n\1\/\2#; \\
+		s#^\(.*\)/\(.\+\)(\(.\+\))#\1/\3\n\1\/\2#; \\
+		s#/(default)##g; \\
+		s#/*$##g; '"'"
+
+alias _module_loaded_no_version_alias '\\
+@VERSIONING@    @BASEPREFIX@/@VERSION@/bin/modulecmd tcsh -t list |& sed \\
+@NOTVERSIONING@ @bindir@/modulecmd tcsh -t list |& sed \\
+		'"'"'/:$/d; \\
+		/:ERROR:/d; \\
+		s#^\(.*\)/\(.\+\)(default)#\1\n\1\/\2#; \\
+		s#^\(.*\)/\(.\+\)(\(.\+\))#\1/\1\/\2#; \\
+		s#/(default)##g; \\
+		s#/*$##g; '"'"
+
+alias _module_not_yet_loaded '\\
+      		mkfifo /tmp/modules_tcsh_completion.$$.p1 /tmp/modules_tcsh_completion.$$.p2 && \\
+		( _module_avail | sort > /tmp/modules_tcsh_completion.$$.p1 & ); \\
+		( _module_loaded | sort > /tmp/modules_tcsh_completion.$$.p2 & ); \\
+		comm -23 /tmp/modules_tcsh_completion.$$.p1 /tmp/modules_tcsh_completion.$$.p2; \\
+		rm /tmp/modules_tcsh_completion.$$.p1 /tmp/modules_tcsh_completion.$$.p2'
+
+alias _module_modulepath 'echo ${MODULEPATH} | sed '"'"'s/:/\n/g;'"'"' '
+
+set module_cmds = "add apropos avail clear display help initadd initclear initlist initprepend initrm initswitch keyword list load purge refresh rm show swap switch unload unuse update use whatis"
+
+set module_opts = "-c -f -h -i -l -s -t -u -v -H -V --create --force  --help  --human --icase --long   --silent --terse --userlvl --verbose --version"
+
+set module_cmds_opts = "${module_cmds} ${module_opts}"
+
+set module_cmds_wrap = (${module_cmds})
+set module_opts_wrap = (${module_opts})
+set module_cmds_opts_wrap = (${module_cmds_opts})
+
+complete module 'n/help/`_module_avail`/' \
+	      'n/add/`_module_not_yet_loaded`/' \
+	      'n/load/`_module_not_yet_loaded`/' \
+	      'n/rm/`_module_loaded_no_version_alias`/' \
+	      'n/remove/`_module_loaded_no_version_alias`/' \
+	      'n/unload/`_module_loaded_no_version_alias`/' \
+	      'n/swap/`_module_loaded_no_version_alias`/' \
+	      'n/switch/`_module_loaded_no_version_alias`/' \
+	      'N/switch/`_module_not_yet_loaded`/' \
+	      'n/show/`_module_avail`/' \
+	      'n/display/`_module_avail`/' \
+	      'n/list/n/' \
+	      'n/avail/`_module_avail_with_prefixes`/' \
+	      'n/use/d/' \
+	      'N/use/d/' \
+	      'n/unuse/`_module_modulepath`/' \
+	      'n/update/n/' \
+	      'n/clear/n/' \
+	      'n/purge/n/' \
+	      'n/refresh/n/' \
+	      'n/whatis/`_module_avail`/' \
+	      'n/apropos/x:string/' \
+	      'n/keyword/x:string/' \
+	      'n/initadd/`_module_avail_not_in_init`/' \
+	      'n/initprepend/`_module_avail_not_in_init`/' \
+	      'n/initrm/`_module_avail_in_init`/' \
+	      'n/initswitch/`_module_avail_in_init`/' \
+	      'N/initswitch/`_module_avail_not_in_init`/' \
+	      'n/initlist/n/' \
+	      'n/initclear/n/' \
+	      'n/-u/(novice expert advanced)/' \
+	      'n/--userlvl/(novice expert advanced)/' \
+	      'C/sw*/(switch)/' \
+	      'p/1/$module_cmds_opts_wrap/' \
+	      'n/-*/$module_cmds_wrap/' 
+
