@@ -11,7 +11,7 @@ AUTOMAKE_OPTIONS=foreign no-installinfo
 
 EXTRA_SCRIPTS=							\
 	sh ksh zsh bash bash_completion				\
-	csh tcsh						\
+	csh tcsh tcsh_completion				\
 	perl.pm python.py ruby.rb cmake				\
 	.modulespath
 

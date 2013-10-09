@@ -49,3 +49,8 @@ endif
 if (! $?LOADEDMODULES ) then
   setenv LOADEDMODULES ""
 endif
+
+if ( $?tcsh && -r @INITPATH@/tcsh_completion ) then
+ source @INITPATH@/tcsh_completion
+endif
+
