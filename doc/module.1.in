@@ -431,7 +431,7 @@ The directory for system-wide
 The location of this directory and those below can be changed using
 the \s-1MODULEPATH\s0 environment variable as described above.
 .TP
-.B @BASEPREFIX@/@VERSION@ and @VERSIONPATH@
+.B @BASEPREFIX@/@VERSION@/modulefiles and @VERSIONPATH@
 If module versioning is enabled these directories provide
 .I modulefiles
 distributed by the module package.
